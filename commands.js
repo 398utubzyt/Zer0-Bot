@@ -7,3 +7,14 @@ class Command {
         this.method = method;
     }
 }
+
+class CommandUtil {
+    static get Prefix() {
+        return ':';
+    }
+
+    static StringToCommand(msgContent) {
+        if (typeof(msgContent) != String)
+            throw 'Message content is not a string.';
+    }
+}

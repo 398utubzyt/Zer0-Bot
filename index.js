@@ -7,9 +7,9 @@ client.on('ready', () => {
 });
 
 client.on('message', msg => {
-  if (msg.content === 'ping') {
-    msg.reply('pong');
-  }
+	if (msg.content.startsWith(CommandUtil.Prefix)) {
+		var command = CommandUtil.StringToCommand(msg.content);
+	}
 });
 
-client.login('token');
+client.login(API.Token);
