@@ -1,0 +1,5 @@
+{
+    "Error": "Error! {0}",
+    "Permissions": "Insufficient permissions! {0}",
+    "InvalidCommand": "{0} is an invalid command!"
+}

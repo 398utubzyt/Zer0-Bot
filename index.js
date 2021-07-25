@@ -9,10 +9,25 @@
 // and class called "api.json". For more
 // info, just message Jaiden.
 const API = require('./api.json');
+const Messages = require('./messages.json');
 
 const readline = require('readline').createInterface(process.stdin, process.stdout);
 const Discord = require('discord.js');
 const client = new Discord.Client();
+
+/**
+ * 
+ * @param {string} message 
+ * @param {any[]} arguments 
+ * @returns {string} The modified string
+ */
+function Combine(message, ...args) {
+	for (var i = 0; i < args.length; i++) {
+		message = message.replace('{' + i + '}', args[i]);
+	}
+
+	return message;
+}
 
 /**
  * Sends a message in the specified channel.
@@ -32,25 +47,50 @@ function SendMessage(channel, message) {
 }
 
 /**
+ * Sends a message in the specified channel.
+ * @param {number} channel 
+ * @param {string} message 
+ */
+ function SendMessageID(channel, message) {
+	client.guilds.fetch(API.serverId).then((guild) => {
+		var cache = guild.channels.cache.get(channel);
+
+		if (cache == null) {
+			return;
+		}
+		
+		cache.send(message).catch((err) => error(err));
+	}).catch((err) => error(err));
+}
+
+/**
  * @class An internal class called Command, that holds information about a command.
  */
  class Command {
 
 	//#region Command Functions
 
-	static Help(channel) {
-		SendMessage(channel, "__**Command List**__ \nHelp: The command you just ran, eediot. \nPing: See how slow the bot is running.");
+	/**
+	 * Help Command
+	 * @param {any[]} args
+	 */
+	static Help(args) {
+		SendMessage(args[0], "__**Command List**__ \nHelp: The command you just ran, eediot. \nPing: See how slow the bot is running.");
 	}
 
-	static Ping(time, channel) {
+	/**
+	 * Ping Command
+	 * @param {any[]} args
+	 */
+	static Ping(args) {
 		client.guilds.fetch(API.serverId).then((guild) => {
-			var cache = guild.channels.cache.find((value, key, collection) => {return value.name == channel;});
-	
+			var cache = guild.channels.cache.find((value, key, collection) => {return value.name == args[1];});
+			
 			if (cache == null) {
 				return;
 			}
-			
-			cache.send('Pinging...').then((m) => {m.edit('Your ping is: ' + m.createdTimestamp - time + 'ms.')}).catch((err) => error(err));
+
+			cache.send('Pinging...').then((m) => {m.edit('My ping is about ' + (m.createdTimestamp - args[0]) + 'ms.')}).catch((err) => error(err));
 		}).catch((err) => error(err));
 	}
 
@@ -64,7 +104,7 @@ function SendMessage(channel, message) {
 	 */
 	static GetFromName(cmdName, args, message)
 	{
-		switch (cmdName) {
+		switch (cmdName.toLowerCase()) {
 			case 'help':
 				var arr = args;
 				return new Command('help', [], args, message, this.Help);
@@ -72,10 +112,10 @@ function SendMessage(channel, message) {
 			case 'ping':
 				var arr = args;
 				arr.push(message.createdTimestamp);
-				return new Command('ping', [], args, message, this.Ping);
+				return new Command('ping', [], arr, message, this.Ping);
 
 			default:
-				SendMessage(message.channel.name, 'Invalid command!');
+				SendMessageID(message.channel.id, Combine(Messages.InvalidCommand, cmdName));
 				return null;
 		}
 	}
@@ -93,21 +133,23 @@ function SendMessage(channel, message) {
 
 		arr.push(this.message.channel.name);
 
-		//SendMessage(this.message.channel.name, 'Running command: ' + this.name + ' with args [' + arr.join(', ') + '] called by ' + this.message.author.username + '.');
+		// SUPER HELPFUL WHEN DEBUGGING!! DO NOT REMOVE!!
+		// SendMessage(this.message.channel.name, 'Running command: ' + this.name + ' with args [' + arr.join(', ') + '] called by ' + this.message.author.username + '.');
+
 		this.method.call(this, arr);
 	}
 
 	/**
 	 * Creates a command.
 	 * @param {string} name 
-	 * @param {string[]} aliases 
+	 * @param {Discord.PermissionFlags} permissions
 	 * @param {string[]} args
 	 * @param {Discord.Message} message
 	 * @param {function} method 
 	 */
-    constructor(name, aliases, args, message, method) {
+    constructor(name, permissions, args, message, method) {
         this.name = name;
-        this.aliases = aliases;
+        this.permissions = permissions;
 		this.args = args;
         this.message = message;
         this.method = method;
