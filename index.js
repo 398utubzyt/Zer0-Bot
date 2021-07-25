@@ -180,8 +180,6 @@ class CommandUtil {
 
 //#endregion
 
-//#endregion
-
 //#region Events
 
 client.on('ready', () => {
