@@ -7,7 +7,7 @@
 // This API is automatically gitignore-d.
 // When testing, just create your own file
 // and class called "api.json". For more
-// info, just message Jaiden.
+// info, look at the README file.
 const API = require('./api.json');
 const Messages = require('./messages.json');
 
