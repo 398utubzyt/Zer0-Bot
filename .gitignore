@@ -79,3 +79,4 @@ typings/
 
 # Bot API Stuff
 api.js
+api.json
