@@ -1,2 +1,2 @@
-# Zer0-Bot
+# Zer0 Bot
  Made for Michael's Hangout Server
