@@ -358,6 +358,10 @@ client.on('ready', () => {
 
 	if (!FileExists('presidential-candidates.txt')) {
 		CreateFile('presidential-candidates.txt');
+	} else {
+		var content = ReadFile('presidential-candidates.txt');
+		electionIds = content.split('\n');
+		electionIds.forEach((value, index, array) => {value.replace('\n', '');});
 	}
 });
 
