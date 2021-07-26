@@ -2,8 +2,6 @@
 
 //#region Import/Require
 
-//#region Classes and Shit
-
 // This API is automatically gitignore-d.
 // When testing, just create your own file
 // and class called "api.json". For more
@@ -12,8 +10,13 @@ const API = require('./api.json');
 const Messages = require('./messages.json');
 
 const readline = require('readline').createInterface(process.stdin, process.stdout);
+const io = require('fs');
 const Discord = require('discord.js');
+const { time } = require('console');
 const client = new Discord.Client();
+const persistentPath = __dirname + '\\persistent_data\\';
+
+var electionIds = [];
 
 /**
  * 
@@ -25,9 +28,99 @@ function Combine(message, ...args) {
 	for (var i = 0; i < args.length; i++) {
 		message = message.replace('{' + i + '}', args[i]);
 	}
-
+	
 	return message;
 }
+
+/**
+ * Loops the number `x` between `min` and `max`
+ * @param {number} x The number to repeat
+ * @param {number} min The minimum boundary
+ * @param {number} max The maximum boundary
+ * @returns 
+ */
+function Loop(x, min, max) {
+	return ((x - min) % (max - min)) + min;
+}
+
+/**
+ * Converts the string to be a double digit number.
+ * @param {string} numStr The number string.
+ * @returns The number represent as an 0X or XX number.
+ */
+function ForceDoubleDigit(numStr) {
+	if (numStr.length != 2) { return '0' + numStr.toString(); }
+	return numStr;
+}
+
+function GetElectionTerm(termOffset = 0) {
+	var date = new Date();
+	var month = Loop(date.getMonth() + 2, 1, 13);
+	var day = date.getDay();
+
+	if (day < 10) {
+		return ForceDoubleDigit(Loop(month + termOffset - 1, 1, 13)) + '-' + ForceDoubleDigit(Loop(month + termOffset, 1, 13));
+	} else {
+		return ForceDoubleDigit(Loop(month + termOffset, 1, 13)) + '-' + ForceDoubleDigit(Loop(month + termOffset + 1, 1, 13));
+	}
+}
+
+//#region File I/O
+
+/**
+ * Creates a file in the persistent directory.
+ * @param {string} name The name of the file. 
+ * @param {string} content The content to write to the file.
+ */
+function CreateFile(name, content = '') {
+	io.writeFileSync(persistentPath + name, content);
+}
+
+/**
+ * Creates a file in the persistent directory.
+ * @param {string} name The name of the file. 
+ * @param {string} content The content to write to the file.
+ */
+ function WriteFile(name, content = '') {
+	io.writeFileSync(persistentPath + name, content);
+}
+
+/**
+ * Creates a file in the persistent directory.
+ * @param {string} name The name of the file. 
+ * @param {string} content The content to write to the file.
+ */
+ function AppendFile(name, content = '') {
+	io.appendFileSync(persistentPath + name, content);
+}
+
+/**
+ * Reads a file in the persistent directory.
+ * @param {string} name The name of the file.
+ * @returns {string} Contents of the file.
+ */
+function ReadFile(name) {
+	return io.readFileSync(persistentPath + name).toString();
+}
+
+/**
+ * Deletes a file in the persistent directory.
+ * @param {string} name The name of the file.
+ */
+function DeleteFile(name) {
+	io.unlinkSync(persistentPath + name);
+}
+
+/**
+ * Checks if a file exists, and returns true if it does.
+ * @param {string} name The name of the file.
+ * @returns {boolean} If the file exists.
+ */
+function FileExists(name) {
+	return io.existsSync(persistentPath + name);
+}
+
+//#endregion
 
 /**
  * Sends a message in the specified channel.
@@ -63,6 +156,10 @@ function SendMessage(channel, message) {
 	}).catch((err) => error(err));
 }
 
+//#endregion
+
+//#region Classes and Shit
+
 /**
  * @class An internal class called Command, that holds information about a command.
  */
@@ -75,7 +172,7 @@ function SendMessage(channel, message) {
 	 * @param {any[]} args
 	 */
 	static Help(args) {
-		SendMessage(args[0], "__**Command List**__ \nHelp: The command you just ran, eediot. \nPing: See how slow the bot is running.");
+		SendMessage(args[0], "__**Command List**__ \nHelp: The command you just ran, eediot. \nPing: See how slow the bot is running. \nElection-Register: Register yourself in the next election. \nElection-Unregister: Unregister yourself from the next election.");
 	}
 
 	/**
@@ -94,6 +191,67 @@ function SendMessage(channel, message) {
 		}).catch((err) => error(err));
 	}
 
+	/**
+	 * Election-Register Command
+	 * @param {any[]} args
+	 */
+	static ElectionRegister(args) {
+		var id = parseInt(args[0]);
+
+		if (isNaN(id)) { SendMessage(args[1], 'invalid user id lel.'); return; }
+
+		var guild = client.guilds.cache.get(API.serverId);
+
+		if (guild == null) { SendMessage(args[1], 'invalid server id lel.'); return; }
+
+		var user = guild.members.cache.get(args[0]);
+
+		if (user == null) { SendMessage(args[1], 'invalid member id lel.'); return; }
+
+		if (electionIds.includes(args[0])) { SendMessage(args[1], 'You are already registered for the ' + GetElectionTerm() + ' election.'); return; }
+
+		electionIds.push(args[0]);
+
+		if (ReadFile('presidential-candidates.txt').length > 0) { AppendFile('presidential-candidates.txt', '\n');}
+		AppendFile('presidential-candidates.txt', args[0]);
+
+		var date = new Date();
+		SendMessage(args[1], 'You are now registered for the ' + GetElectionTerm() + ' election.');
+	}
+
+	/**
+	 * Election-Unregister Command
+	 * @param {any[]} args
+	 */
+	static ElectionUnregister(args) {
+		var id = parseInt(args[0]);
+
+		if (isNaN(id)) { SendMessage(args[1], 'invalid user id lel.'); return; }
+
+		var guild = client.guilds.cache.get(API.serverId);
+
+		if (guild == null) { SendMessage(args[1], 'invalid server id lel.'); return; }
+
+		var user = guild.members.cache.get(args[0]);
+
+		if (user == null) { SendMessage(args[1], 'invalid member id lel.'); return; }
+
+		if (!electionIds.includes(user.id)) { SendMessage(args[1], 'You haven\'t been registered for the ' + GetElectionTerm() + ' election yet.'); return; }
+
+		electionIds = electionIds.join(':::').replace(args[0] + ':::', '').split(':::');
+		electionIds.forEach((value, index, array) => {value.replace(':::', '');});
+
+		var fileContent = ReadFile('presidential-candidates.txt');
+		if (fileContent.includes(args[0] + '\n')) {
+			WriteFile('presidential-candidates.txt', fileContent.replace(args[0] + '\n', ''));
+		} else {
+			WriteFile('presidential-candidates.txt', fileContent.replace(args[0] + '', ''));
+		}
+
+		var date = new Date();
+		SendMessage(args[1], 'You have been unregistered from the ' + GetElectionTerm() + ' election.');
+	}
+
 	//#endregion
 
 	/**
@@ -106,13 +264,22 @@ function SendMessage(channel, message) {
 	{
 		switch (cmdName.toLowerCase()) {
 			case 'help':
-				var arr = args;
-				return new Command('help', [], args, message, this.Help);
+				return new Command('help', [], [], message, this.Help);
 			
 			case 'ping':
-				var arr = args;
-				arr.push(message.createdTimestamp);
-				return new Command('ping', [], arr, message, this.Ping);
+				return new Command('ping', [], [message.createdTimestamp], message, this.Ping);
+
+			case 'election-register':
+				return new Command('election-register', [], [message.author.id], message, this.ElectionRegister);
+
+			case 'election-unregister':
+				return new Command('election-unregister', [], [message.author.id], message, this.ElectionUnregister);
+
+			case 'register':
+				return new Command('election-register', [], [message.author.id], message, this.ElectionRegister);
+
+			case 'unregister':
+				return new Command('election-unregister', [], [message.author.id], message, this.ElectionUnregister);
 
 			default:
 				SendMessageID(message.channel.id, Combine(Messages.InvalidCommand, cmdName));
@@ -168,7 +335,7 @@ class CommandUtil {
      */
     static MessageToCommand(message) {
         if (!message.content.startsWith(this.Prefix)) {
-            throw 'Message is not a command.';
+            throw Combine(Messages.Error, 'Message is not a command.');
         }
 
         var content = message.content.substr(this.Prefix.length);
@@ -183,7 +350,15 @@ class CommandUtil {
 //#region Events
 
 client.on('ready', () => {
-  	console.log(`${client.user.tag} is ready for Mod Abuse.`);
+  	console.log(Combine(Messages.Startup, client.user.tag));
+	
+	if (!io.existsSync(persistentPath)) {
+		io.mkdirSync(persistentPath);
+	}
+
+	if (!FileExists('presidential-candidates.txt')) {
+		CreateFile('presidential-candidates.txt');
+	}
 });
 
 client.on('message', msg => {

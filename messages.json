@@ -1,5 +1,6 @@
 {
+    "Startup": "{0} is ready for Mod Abuse",
     "Error": "Error! {0}",
     "Permissions": "Insufficient permissions! {0}",
-    "InvalidCommand": "{0} is an invalid command!"
+    "InvalidCommand": "\"{0}\" is an invalid command!"
 }
