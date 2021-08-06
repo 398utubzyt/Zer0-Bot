@@ -114,14 +114,10 @@ export default class Command {
             return;
         }
 		
-        var candidates : string;
-        for (var i : number = 0; i < Bot.election.candidateCount; i++) {
-            candidates += Bot.election.candidates[i].user.username;
-            if (i < Bot.election.candidateCount - 1)
-                candidates += '\n';
-        }
+        Bot.SendMessage(args[0], BotUtil.Combine("__**{0} Candidates:**__\n\n{1}", BotUtil.GetElectionTerm(), Bot.election.CandidateList()));
 
-        Bot.SendMessage(args[0], BotUtil.Combine("__**{0} Candidates:**__\n\n{1}", BotUtil.GetElectionTerm(), candidates));
+        var candidates = new Discord.MessageEmbed();
+        Bot.SendEmbed(args[0], candidates);
 	}
 
     /**

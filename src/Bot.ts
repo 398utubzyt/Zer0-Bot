@@ -37,6 +37,18 @@ export default class Bot {
         }).catch((err) => this.Error(err));
     }
 
+    public static SendEmbed(channel : string, embed : Discord.MessageEmbed) {
+        this.client.guilds.fetch(API.serverId).then((guild) => {
+            var cache : Discord.TextChannel = guild.channels.cache.find((value, key, collection) => {return value.name == channel;}) as Discord.TextChannel;
+    
+            if (cache == null) {
+                return;
+            }
+            
+            cache.send(embed).catch((err) => this.Error(err));
+        }).catch((err) => this.Error(err));
+    }
+
     public static InsufficientPermissions(channel : string, permissions : string) {
         this.SendMessage(channel, BotUtil.Combine(Messages.Permissions, permissions));
     }

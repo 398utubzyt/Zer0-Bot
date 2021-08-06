@@ -4,10 +4,12 @@ import Bot from "../Bot";
 import Candidate from "./Candidate";
 import Vote from "./Vote";
 import BotUtil from "../BotUtil";
+import Cheater from "./Cheater";
 
 export default class Election {
     public channel : Discord.Channel;
     public candidates : Candidate[];
+    public cheaters : Cheater[];
     public started : boolean;
 
     public get candidateCount() : number {
@@ -36,7 +38,7 @@ export default class Election {
         return arr;
     }
 
-    public get cheaters() : Discord.User[] {
+    public get multiVoteCheaters() : Discord.User[] {
         var votes : Vote[] = this.votes;
         var usersVoted : Discord.User[] = [];
         var cheaters : Discord.User[] = [];
@@ -58,10 +60,18 @@ export default class Election {
         return cheaters;
     }
 
+    public AddCheater(user? : Discord.User) : void {
+
+    }
+
     public Start() : void {
         this.started = true;
         Console.Log("Starting the {0} election!", BotUtil.GetElectionTerm());
-        Bot.SendMessage("zer0-bot-testing", `Starting the ${BotUtil.GetElectionTerm()} election!`);
+    }
+
+    public End() : void {
+        this.started = false;
+        Console.Log("Ending the {0} election!", BotUtil.GetElectionTerm());
     }
 
     public HasCandidate(id : string) : boolean {
@@ -70,6 +80,17 @@ export default class Election {
 
     public GetCandidate(id : string) : Candidate {
         return this.candidates[this.candidateIds.indexOf(id)];
+    }
+
+    public CandidateList(seperator : string = '\n') : string {
+        var list : string = "";
+        for (var i : number = 0; i < this.candidateCount; i++) {
+            list += this.candidates[i].user.username;
+
+            if (i < this.candidateCount - 1)
+                list += seperator;
+        }
+        return list;
     }
 
     public Register(id : string) : void {
