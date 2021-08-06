@@ -80,3 +80,6 @@ typings/
 # Bot API Stuff
 api.json
 persistent_data/
+
+# Typescript to Javascript code
+js/
