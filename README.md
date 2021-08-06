@@ -30,7 +30,7 @@ For Discord API functionality (which you will definitely need), you need to crea
 ### *Levels:*
 
 - [ ] Store Data
-- [ ] Persistent Data
+- [x] Persistent Data
 - [ ] Level Up Message
 - [ ] Leaderboard
 
@@ -49,7 +49,7 @@ For Discord API functionality (which you will definitely need), you need to crea
 
 ### *Elections:*
 
-- [ ] Add Candidates
+- [x] Add Candidates
 - [ ] Set/Manage Reactions
 - [ ] Detect Cheating (removing votes etc.)
 
