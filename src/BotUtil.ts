@@ -7,7 +7,8 @@ export default class BotUtil {
      */
     public static Combine(message : string, ...args : any[]) : string{
         for (var i = 0; i < args.length; i++) {
-            message = message.replace('{' + i + '}', args[i]);
+            if (args[i] != null)
+                message = message.replace('{' + i + '}', args[i].toString());
         }
         
         return message;

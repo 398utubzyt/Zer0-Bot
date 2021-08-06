@@ -4,6 +4,7 @@ import API from "../../api.json";
 import Messages from "../../messages.json";
 import File from "../IO/File";
 import * as Discord from "discord.js";
+import { Console } from "console";
 
 /**
  * @class An internal class called Command, that holds information about a command.
@@ -18,11 +19,11 @@ export default class Command {
 
 	//#region Command Functions
 
-	private static Help(args : any[]) : void {
+	private static Help(cmd : Command, args : any[]) : void {
 		Bot.SendMessage(args[0], "__**Command List**__ \nHelp: The command you just ran, eediot. \nPing: See how slow the bot is running. \nElection-Register: Register yourself in the next election. \nElection-Unregister: Unregister yourself from the next election. \nElection-Candidates: View the current candidates for the election.");
 	}
 
-	private static Ping(args : any[]) : void {
+	private static Ping(cmd : Command, args : any[]) : void {
 		Bot.client.guilds.fetch(API.serverId).then((guild) => {
 			var cache : Discord.TextChannel = guild.channels.cache.find((value, key, collection) => {return value.name == args[1];}) as Discord.TextChannel;
 			
@@ -38,7 +39,7 @@ export default class Command {
 	 * Election-Register Command
 	 * @param {any[]} args
 	 */
-	private static ElectionRegister(args : any[]) : void {
+	private static ElectionRegister(cmd : Command, args : any[]) : void {
 		var id = parseInt(args[0]);
 
 		if (isNaN(id)) { Bot.SendMessage(args[1], 'invalid user id lel.'); return; }
@@ -51,7 +52,12 @@ export default class Command {
 
 		if (user == null) { Bot.SendMessage(args[1], 'invalid member id lel.'); return; }
 
-		if (Bot.election.candidates.includes(args[0])) { Bot.SendMessage(args[1], 'You are already registered for the ' + BotUtil.GetElectionTerm() + ' election.'); return; }
+		if (Bot.election.HasCandidate(args[0])) { Bot.SendMessage(args[1], 'You are already registered for the ' + BotUtil.GetElectionTerm() + ' election.'); return; }
+
+        if (Bot.election.started) {
+            Bot.SendMessage(args[1], "The election has already started! You can't register now!");
+            return;
+        }
 
 		Bot.election.Register(args[0]);
 
@@ -65,7 +71,8 @@ export default class Command {
 	 * Election-Unregister Command
 	 * @param {any[]} args
 	 */
-	private static ElectionUnregister(args : any[]) {
+	private static ElectionUnregister(cmd : Command, args : any[]) : void {
+
 		var id = parseInt(args[0]);
 
 		if (isNaN(id)) { Bot.SendMessage(args[1], 'invalid user id lel.'); return; }
@@ -78,7 +85,12 @@ export default class Command {
 
 		if (user == null) { Bot.SendMessage(args[1], 'invalid member id lel.'); return; }
 
-		if (!Bot.election.candidateIds.includes(args[0])) { Bot.SendMessage(args[1], 'You haven\'t been registered for the ' + BotUtil.GetElectionTerm() + ' election yet.'); return; }
+		if (!Bot.election.HasCandidate(args[0])) { Bot.SendMessage(args[1], 'You haven\'t been registered for the ' + BotUtil.GetElectionTerm() + ' election yet.'); return; }
+
+        if (Bot.election.started) {
+            Bot.SendMessage(args[1], "The election has already started! You can't unregister now!");
+            return;
+        }
 
 		Bot.election.Unregister(args[0]);
 
@@ -93,10 +105,10 @@ export default class Command {
 	}
 
     /**
-	 * Election-Unregister Command
+	 * Election-Candidates Command
 	 * @param {any[]} args
 	 */
-	private static ElectionCandidates(args : any[]) {
+	private static ElectionCandidates(cmd : Command, args : any[]) : void {
 		if (Bot.election.candidateCount < 1) {
             Bot.SendMessage(args[0], BotUtil.Combine("No one has registered for the {0} election.", BotUtil.GetElectionTerm()));
             return;
@@ -112,6 +124,29 @@ export default class Command {
         Bot.SendMessage(args[0], BotUtil.Combine("__**{0} Candidates:**__\n\n{1}", BotUtil.GetElectionTerm(), candidates));
 	}
 
+    /**
+	 * Election-Start Command
+	 * @param {any[]} args
+	 */
+	private static ElectionStart(cmd : Command, args : any[]) : void {
+		
+		var guild = Bot.client.guilds.cache.get(API.serverId);
+
+		if (guild == null) { Bot.SendMessage(args[1], 'invalid server id lel.'); return; }
+
+		var user = guild.members.cache.get(args[0]);
+
+		if (user == null) { Bot.SendMessage(args[1], 'invalid member id lel.'); return; }
+
+        if ((user.permissions.bitfield & cmd.permissions) != cmd.permissions) {
+            Bot.InsufficientPermissions((cmd.message.channel as Discord.TextChannel).name, "Administrator");
+            return;
+        }
+
+        Bot.election.Start();
+        Bot.SendMessage((cmd.message.channel as Discord.TextChannel).name, Messages.ElectionBegin);
+	}
+
 	//#endregion
 
 	/**
@@ -120,7 +155,7 @@ export default class Command {
 	 * @param {string[]} args The arguments of the command
 	 * @param {Discord.Message} message The message that was sent
 	 */
-	public static GetFromName(cmdName : string, args : string[], message : Discord.Message)
+	public static GetFromName(cmdName : string, args : string[], message : Discord.Message) : Command
 	{
 		switch (cmdName.toLowerCase()) {
 			case 'help':
@@ -134,18 +169,21 @@ export default class Command {
 
 			case 'election-unregister':
 				return new Command('election-unregister', 0, [message.author.id], message, this.ElectionUnregister);
+                
+            case 'election-candidates':
+                return new Command('election-candidates', 0, [], message, this.ElectionCandidates);
 
 			case 'register':
 				return new Command('election-register', 0, [message.author.id], message, this.ElectionRegister);
 
 			case 'unregister':
 				return new Command('election-unregister', 0, [message.author.id], message, this.ElectionUnregister);
-                
-			case 'election-candidates':
-				return new Command('election-candidates', 0, [], message, this.ElectionCandidates);
 
             case 'candidates':
 				return new Command('election-candidates', 0, [], message, this.ElectionCandidates);
+
+            case 'election-start':
+                return new Command('election-start', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionStart);
 
 			default:
 				Bot.SendMessage(message.channel.id, BotUtil.Combine(Messages.InvalidCommand, cmdName));
@@ -156,7 +194,7 @@ export default class Command {
 	/**
 	 * Runs the command.
 	 */
-	public Run() {
+	public Run() : void {
 		var arr = this.args;
 		if (arr.length > 0 && arr[0] == '') {
 			arr = arr.reverse();
@@ -169,7 +207,7 @@ export default class Command {
 		// SUPER HELPFUL WHEN DEBUGGING!! DO NOT REMOVE!!
 		// SendMessage(this.message.channel.name, 'Running command: ' + this.name + ' with args [' + arr.join(', ') + '] called by ' + this.message.author.username + '.');
 
-		this.method.call(this, arr);
+		this.method.call(this, this, arr);
 	}
 
 	/**

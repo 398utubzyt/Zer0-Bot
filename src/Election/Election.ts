@@ -64,8 +64,16 @@ export default class Election {
         Bot.SendMessage("zer0-bot-testing", `Starting the ${BotUtil.GetElectionTerm()} election!`);
     }
 
+    public HasCandidate(id : string) : boolean {
+        return this.candidateIds.includes(id);
+    }
+
+    public GetCandidate(id : string) : Candidate {
+        return this.candidates[this.candidateIds.indexOf(id)];
+    }
+
     public Register(id : string) : void {
-        if (this.started || this.candidateIds.includes(id))
+        if (this.started || this.HasCandidate(id))
             return;
 
         
@@ -76,11 +84,12 @@ export default class Election {
     }
 
     public Unregister(id : string) : void {
-        if (this.started || !this.candidateIds.includes(id))
+        if (this.started || !this.HasCandidate(id))
             return;
 
         Bot.client.users.fetch(id).then((user : Discord.User) => {
-            this.candidates.push(new Candidate(user));
+            Console.Log("Unegister {0} ({1})", id, user.username);
+            this.candidates.splice(this.candidates.indexOf(this.GetCandidate(id)), 1);
         }).catch((err : any) => Bot.Error(err));
     }
 

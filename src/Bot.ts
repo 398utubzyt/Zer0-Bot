@@ -17,6 +17,8 @@ export default class Bot {
         this.client = new Discord.Client();
         this.client.on('ready', () => this.Ready());
         this.client.on('message', (message) => this.Message(message));
+        this.client.on('messageReactionAdd', (reaction, user) => this.ReactionAdd(reaction, user as Discord.PartialUser));
+        this.client.on('messageReactionRemove', (reaction, user) => this.ReactionRemove(reaction, user as Discord.PartialUser));
 
         this.election = new Election();
 
@@ -33,6 +35,10 @@ export default class Bot {
             
             cache.send(message).catch((err) => this.Error(err));
         }).catch((err) => this.Error(err));
+    }
+
+    public static InsufficientPermissions(channel : string, permissions : string) {
+        this.SendMessage(channel, BotUtil.Combine(Messages.Permissions, permissions));
     }
 
     public static Error(err : any) : void {
@@ -69,6 +75,22 @@ export default class Bot {
             }
     
             command.Run();
+        }
+    }
+
+    public static ReactionAdd(reaction : Discord.MessageReaction, user : Discord.PartialUser) {
+        if (reaction.message.channel.id == API.electionChannel) {
+            if (!user.equals(this.client.user)) {
+                
+            }
+        }
+    }
+
+    public static ReactionRemove(reaction : Discord.MessageReaction, user : Discord.PartialUser) {
+        if (reaction.message.channel.id == API.electionChannel) {
+            if (!user.equals(this.client.user)) {
+                
+            }
         }
     }
 }

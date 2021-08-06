@@ -1,8 +1,10 @@
 {
     "Startup": "{0} is ready for Mod Abuse",
     "Error": "Error! {0}",
-    "Permissions": "Insufficient permissions! {0}",
+    "Permissions": "Insufficient permissions! Permissions required: {0}",
     "InvalidCommand": "\"{0}\" is an invalid command!",
+    "ElectionBegin": "The election has begun, cast your votes now! Use `::election-candidates` to see who's running!",
     "MultiVoterExposed": "{0}, please don't vote for multiple people. Your votes have been removed, please vote again.",
-    "VoteRemovedExposed": "{0} removed {1}'s vote. {0}, please don't remove votes."
+    "VoteRemovedExposed": "{0} removed {1}'s vote. {0}, please don't remove votes.",
+    "VoteSelfExposed": "{0}, you can't vote for yourself. That's unfair."
 }

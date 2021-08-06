@@ -2,8 +2,9 @@ import * as Discord from "discord.js";
 import Vote from "./Vote";
 
 enum CheaterType {
-    MULTI_VOTER,
-    VOTE_REMOVING
+    MULTI_VOTE,
+    REMOVE_VOTE,
+    SELF_VOTE
 }
 
 export default class Cheater {
