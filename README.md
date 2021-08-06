@@ -9,9 +9,12 @@ This is a bot made for Michael's Hangout Server, the only reason he has Discord 
 For Discord API functionality (which you will definitely need), you need to create a file called `api.json`. I gitignored this file so that people can't steal the bot token, so if you want to create your own bot or test the code you can use this example to get started: 
 ```json
 {
-    "token": "bot-token here",
+    "token": "bot-token-here",
     "serverId": "server-id-here",
-    "testChannel": "bot-testing-channel-id-here"
+    "testChannel": "testing-channel-id-here",
+    "electionChannel": "election-channel-id-here",
+    "voteEmoji": "thumbsup",
+    "prefix": "::"
 }
 ```
 
