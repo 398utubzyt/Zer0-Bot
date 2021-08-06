@@ -83,3 +83,6 @@ persistent_data/
 
 # Typescript to Javascript code
 js/
+
+# Not needed, I'm only using it for reference
+index.js
