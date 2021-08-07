@@ -4,7 +4,7 @@ import API from "../../api.json";
 import Messages from "../../messages.json";
 import File from "../IO/File";
 import * as Discord from "discord.js";
-import { Console } from "console";
+import Color from "../Graphics/Color";
 
 /**
  * @class An internal class called Command, that holds information about a command.
@@ -20,7 +20,7 @@ export default class Command {
 	//#region Command Functions
 
 	private static Help(cmd : Command, args : any[]) : void {
-		Bot.SendMessage(args[0], "__**Command List**__ \nHelp: The command you just ran, eediot. \nPing: See how slow the bot is running. \nElection-Register: Register yourself in the next election. \nElection-Unregister: Unregister yourself from the next election. \nElection-Candidates: View the current candidates for the election.");
+		Bot.Send(args[0], "Command List", "Help: The command you just ran, eediot. \nPing: See how slow the bot is running. \nElection-Register: Register yourself in the next election. \nElection-Unregister: Unregister yourself from the next election. \nElection-Candidates: View the current candidates for the election.", Color.cyan);
 	}
 
 	private static Ping(cmd : Command, args : any[]) : void {
@@ -52,10 +52,10 @@ export default class Command {
 
 		if (user == null) { Bot.SendMessage(args[1], 'invalid member id lel.'); return; }
 
-		if (Bot.election.HasCandidate(args[0])) { Bot.SendMessage(args[1], 'You are already registered for the ' + BotUtil.GetElectionTerm() + ' election.'); return; }
+		if (Bot.election.HasCandidate(args[0])) { Bot.Send(args[1], BotUtil.Combine("{0} Election Registration", BotUtil.GetElectionTerm()), 'You are already registered for the ' + BotUtil.GetElectionTerm() + ' election.', Color.red); return; }
 
         if (Bot.election.started) {
-            Bot.SendMessage(args[1], "The election has already started! You can't register now!");
+            Bot.Send(args[1], BotUtil.Combine("{0} Election Registration", BotUtil.GetElectionTerm()), "The election has already started! You can't register now!", Color.red);
             return;
         }
 
@@ -64,7 +64,7 @@ export default class Command {
 		if (File.Read('presidential-candidates.txt').length > 0) { File.Append('presidential-candidates.txt', '\n');}
 		File.Append('presidential-candidates.txt', args[0]);
 
-		Bot.SendMessage(args[1], 'You are now registered for the ' + BotUtil.GetElectionTerm() + ' election.');
+		Bot.Send(args[1], BotUtil.Combine("{0} Election Registration", BotUtil.GetElectionTerm()), 'You are now registered for the ' + BotUtil.GetElectionTerm() + ' election.', Color.green);
 	}
 
 	/**
@@ -85,10 +85,10 @@ export default class Command {
 
 		if (user == null) { Bot.SendMessage(args[1], 'invalid member id lel.'); return; }
 
-		if (!Bot.election.HasCandidate(args[0])) { Bot.SendMessage(args[1], 'You haven\'t been registered for the ' + BotUtil.GetElectionTerm() + ' election yet.'); return; }
+		if (!Bot.election.HasCandidate(args[0])) { Bot.Send(args[1], 'You haven\'t been registered for the ' + BotUtil.GetElectionTerm() + ' election yet.'); return; }
 
         if (Bot.election.started) {
-            Bot.SendMessage(args[1], "The election has already started! You can't unregister now!");
+            Bot.Send(args[1], BotUtil.Combine("{0} Election Registration", BotUtil.GetElectionTerm()), "The election has already started! You can't unregister now!", Color.red);
             return;
         }
 
@@ -101,7 +101,7 @@ export default class Command {
 			File.Write('presidential-candidates.txt', fileContent.replace(args[0] + '', ''));
 		}
 
-		Bot.SendMessage(args[1], 'You have been unregistered from the ' + BotUtil.GetElectionTerm() + ' election.');
+		Bot.Send(args[1], BotUtil.Combine("{0} Election Registration", BotUtil.GetElectionTerm()), 'You have been unregistered from the ' + BotUtil.GetElectionTerm() + ' election.', Color.green);
 	}
 
     /**
@@ -110,14 +110,11 @@ export default class Command {
 	 */
 	private static ElectionCandidates(cmd : Command, args : any[]) : void {
 		if (Bot.election.candidateCount < 1) {
-            Bot.SendMessage(args[0], BotUtil.Combine("No one has registered for the {0} election.", BotUtil.GetElectionTerm()));
+            Bot.Send(args[0], BotUtil.Combine("{0} Election Cadidates", BotUtil.GetElectionTerm()), BotUtil.Combine("No one has registered for the {0} election.", BotUtil.GetElectionTerm()), Color.red);
             return;
         }
-		
-        Bot.SendMessage(args[0], BotUtil.Combine("__**{0} Candidates:**__\n\n{1}", BotUtil.GetElectionTerm(), Bot.election.CandidateList()));
 
-        var candidates = new Discord.MessageEmbed();
-        Bot.SendEmbed(args[0], candidates);
+        Bot.Send(args[0], BotUtil.Combine("{0} Election Cadidates", BotUtil.GetElectionTerm()), Bot.election.CandidateList(), Color.green);
 	}
 
     /**
@@ -125,22 +122,43 @@ export default class Command {
 	 * @param {any[]} args
 	 */
 	private static ElectionStart(cmd : Command, args : any[]) : void {
-		
-		var guild = Bot.client.guilds.cache.get(API.serverId);
-
-		if (guild == null) { Bot.SendMessage(args[1], 'invalid server id lel.'); return; }
-
-		var user = guild.members.cache.get(args[0]);
-
-		if (user == null) { Bot.SendMessage(args[1], 'invalid member id lel.'); return; }
-
-        if ((user.permissions.bitfield & cmd.permissions) != cmd.permissions) {
-            Bot.InsufficientPermissions((cmd.message.channel as Discord.TextChannel).name, "Administrator");
-            return;
-        }
-
         Bot.election.Start();
         Bot.SendMessage((cmd.message.channel as Discord.TextChannel).name, Messages.ElectionBegin);
+	}
+
+	/**
+	 * Election-Start Command
+	 * @param {any[]} args
+	 */
+	private static ElectionEnd(cmd : Command, args : any[]) : void {
+        Bot.election.End();
+        Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Election Error", BotUtil.Combine("The {0} election has ended early for some reason. Ask {1} for more details.", BotUtil.GetElectionTerm(), BotUtil.Combine("<@{0}>", cmd.message.author.id)), Color.red);
+	}
+
+	/**
+	 * Election-Start Command
+	 * @param {any[]} args
+	 */
+	private static Warn(cmd : Command, args : any[]) : void {
+        if (args.length < 2) {
+			Bot.Send(args[0], "Insufficient Parameters", "Please specify the user to warn.", Color.red);
+			return;
+		}
+
+		var user = Bot.client.guilds.cache.get(API.serverId).members.cache.get((args[0] as string).replace('<@', '').replace('>', ''));
+
+		if (!user) {
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Invalid User", "Could not find the user you specified. Please either use a member ID or mention.", Color.red);
+			return;
+		}
+
+		if (args.length < 3) {
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "User Warned", BotUtil.Combine("<@{0}> has been warned.", user.id), Color.yellow);
+		} else {
+			args.pop();
+			args.shift();
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "User Warned", BotUtil.Combine("<@{0}> has been warned for {1}", user.id, args.join(' ').trimStart().trimEnd()), Color.yellow);
+		}
 	}
 
 	//#endregion
@@ -181,8 +199,14 @@ export default class Command {
             case 'election-start':
                 return new Command('election-start', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionStart);
 
+			case 'election-end':
+                return new Command('election-end', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionEnd);
+
+			case 'warn':
+				return new Command('warn', Discord.Permissions.FLAGS.KICK_MEMBERS | Discord.Permissions.FLAGS.BAN_MEMBERS, args, message, this.Warn);
+
 			default:
-				Bot.SendMessage(message.channel.id, BotUtil.Combine(Messages.InvalidCommand, cmdName));
+				Bot.Send((message.channel as Discord.TextChannel).name, "Invalid Command", BotUtil.Combine(Messages.InvalidCommand, cmdName), Color.red);
 				return null;
 		}
 	}
@@ -199,6 +223,19 @@ export default class Command {
 		}
 
 		arr.push((this.message.channel as Discord.TextChannel).name);
+
+		var guild = Bot.client.guilds.cache.get(API.serverId);
+
+		if (guild == null) { Bot.SendMessage((this.message.channel as Discord.TextChannel).name, 'invalid server id lel.'); return; }
+
+		var user = guild.members.cache.get(this.message.author.id);
+
+		if (user == null) { Bot.SendMessage((this.message.channel as Discord.TextChannel).name, 'invalid member id lel.'); return; }
+
+        if ((user.permissions.bitfield & this.permissions) != this.permissions) {
+            Bot.InsufficientPermissions((this.message.channel as Discord.TextChannel).name, new Discord.Permissions(this.permissions).toArray().join(', '));
+            return;
+        }
 
 		// SUPER HELPFUL WHEN DEBUGGING!! DO NOT REMOVE!!
 		// SendMessage(this.message.channel.name, 'Running command: ' + this.name + ' with args [' + arr.join(', ') + '] called by ' + this.message.author.username + '.');

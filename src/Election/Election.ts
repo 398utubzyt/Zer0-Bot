@@ -64,6 +64,28 @@ export default class Election {
 
     }
 
+    public Vote(user : Discord.User, candidate : Candidate) : boolean {
+        var candidate = this.candidates[this.candidates.indexOf(candidate)];
+
+        if (candidate.votes.find((vote, index, arr) => { return vote.voter.id == user.id; })) {
+            return false;
+        }
+
+        candidate.votes.push(new Vote(user, candidate.user));
+        return true;
+    }
+
+    public Unvote(user : Discord.User, candidate : Candidate) : boolean {
+        var candidate = this.candidates[this.candidates.indexOf(candidate)];
+
+        if (!candidate.votes.find((vote, index, arr) => { return vote.voter.id == user.id; })) {
+            return false;
+        }
+
+        candidate.votes.splice(candidate.votes.indexOf(candidate.votes.find((vote, index, arr) => { return vote.voter.id == user.id; })), 1);
+        return true;
+    }
+
     public Start() : void {
         this.started = true;
         Console.Log("Starting the {0} election!", BotUtil.GetElectionTerm());
