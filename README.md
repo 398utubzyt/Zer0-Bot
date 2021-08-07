@@ -13,6 +13,7 @@ For Discord API functionality (which you will definitely need), you need to crea
     "serverId": "server-id-here",
     "testChannel": "testing-channel-id-here",
     "electionChannel": "election-channel-id-here",
+    "ownerRole": "owner-role-id-here",
     "voteEmoji": "thumbsup",
     "prefix": "::"
 }
