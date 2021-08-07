@@ -13,6 +13,7 @@ For Discord API functionality (which you will definitely need), you need to crea
     "serverId": "server-id-here",
     "testChannel": "testing-channel-id-here",
     "electionChannel": "election-channel-id-here",
+    "ownerRole": "owner-role-id-here",
     "voteEmoji": "thumbsup",
     "prefix": "::"
 }
@@ -27,7 +28,7 @@ For Discord API functionality (which you will definitely need), you need to crea
 - [x] Help Command
 - [x] Ping Command
 - [x] Response Message Json
-- [ ] Permission Checks
+- [x] Permission Checks
 - [ ] Custom Commands
 
 ### *Levels:*
@@ -41,7 +42,7 @@ For Discord API functionality (which you will definitely need), you need to crea
 
 - [ ] Ban Command
 - [ ] Kick Command
-- [ ] Warn Command
+- [x] Warn Command
 - [ ] Mute Command
 - [ ] Admin-Abuse Detection
 - [ ] Admin Log
