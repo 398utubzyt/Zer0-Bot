@@ -14,8 +14,8 @@ For Discord API functionality (which you will definitely need), you need to crea
     "testChannel": "testing-channel-id-here",
     "electionChannel": "election-channel-id-here",
     "ownerRole": "owner-role-id-here",
-    "voteEmoji": "thumbsup",
-    "prefix": "::"
+    "voteEmoji": "emoji-id-here",
+    "prefix": "prefix-text-here"
 }
 ```
 
@@ -54,7 +54,7 @@ For Discord API functionality (which you will definitely need), you need to crea
 ### *Elections:*
 
 - [x] Add Candidates
-- [ ] Set/Manage Reactions
+- [x] Set/Manage Reactions
 - [ ] Detect Cheating (removing votes etc.)
 
 Please leave any suggestions you have in the issues section. 
