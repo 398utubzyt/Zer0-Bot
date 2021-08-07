@@ -12,7 +12,7 @@ import Color from "../Graphics/Color";
 export default class Command {
 
     public name : string;
-    public permissions : number;
+    public permissions : bigint;
     public args : string[];
     public message : Discord.Message;
     public method : Function;
@@ -173,28 +173,28 @@ export default class Command {
 	{
 		switch (cmdName.toLowerCase()) {
 			case 'help':
-				return new Command('help', 0, [], message, this.Help);
+				return new Command('help', 0n, [], message, this.Help);
 			
 			case 'ping':
-				return new Command('ping', 0, [message.createdTimestamp.toString()], message, this.Ping);
+				return new Command('ping', 0n, [message.createdTimestamp.toString()], message, this.Ping);
 
 			case 'election-register':
-				return new Command('election-register', 0, [message.author.id], message, this.ElectionRegister);
+				return new Command('election-register', 0n, [message.author.id], message, this.ElectionRegister);
 
 			case 'election-unregister':
-				return new Command('election-unregister', 0, [message.author.id], message, this.ElectionUnregister);
+				return new Command('election-unregister', 0n, [message.author.id], message, this.ElectionUnregister);
                 
             case 'election-candidates':
-                return new Command('election-candidates', 0, [], message, this.ElectionCandidates);
+                return new Command('election-candidates', 0n, [], message, this.ElectionCandidates);
 
 			case 'register':
-				return new Command('election-register', 0, [message.author.id], message, this.ElectionRegister);
+				return new Command('election-register', 0n, [message.author.id], message, this.ElectionRegister);
 
 			case 'unregister':
-				return new Command('election-unregister', 0, [message.author.id], message, this.ElectionUnregister);
+				return new Command('election-unregister', 0n, [message.author.id], message, this.ElectionUnregister);
 
             case 'candidates':
-				return new Command('election-candidates', 0, [], message, this.ElectionCandidates);
+				return new Command('election-candidates', 0n, [], message, this.ElectionCandidates);
 
             case 'election-start':
                 return new Command('election-start', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionStart);
@@ -251,7 +251,7 @@ export default class Command {
 	 * @param {Discord.Message} message
 	 * @param {Function} method 
 	 */
-    constructor(name : string, permissions : number, args : string[], message : Discord.Message, method : Function) {
+    constructor(name : string, permissions : bigint, args : string[], message : Discord.Message, method : Function) {
         this.name = name;
         this.permissions = permissions;
 		this.args = args;

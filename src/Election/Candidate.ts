@@ -7,6 +7,7 @@ export default class Candidate {
     public get voteCount() : number {
         return this.votes.length;
     }
+    public message : Discord.Message;
 
     public constructor(user : Discord.User) {
         this.user = user;

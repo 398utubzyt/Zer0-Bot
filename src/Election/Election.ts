@@ -7,7 +7,7 @@ import BotUtil from "../BotUtil";
 import Cheater from "./Cheater";
 
 export default class Election {
-    public channel : Discord.Channel;
+    public channel : Discord.TextChannel;
     public candidates : Candidate[];
     public cheaters : Cheater[];
     public started : boolean;
@@ -65,7 +65,7 @@ export default class Election {
     }
 
     public Vote(user : Discord.User, candidate : Candidate) : boolean {
-        var candidate = this.candidates[this.candidates.indexOf(candidate)];
+        var candidate = this.GetCandidate(candidate.user.id);
 
         if (candidate.votes.find((vote, index, arr) => { return vote.voter.id == user.id; })) {
             return false;
@@ -76,7 +76,7 @@ export default class Election {
     }
 
     public Unvote(user : Discord.User, candidate : Candidate) : boolean {
-        var candidate = this.candidates[this.candidates.indexOf(candidate)];
+        var candidate = this.GetCandidate(candidate.user.id);
 
         if (!candidate.votes.find((vote, index, arr) => { return vote.voter.id == user.id; })) {
             return false;
@@ -89,6 +89,7 @@ export default class Election {
     public Start() : void {
         this.started = true;
         Console.Log("Starting the {0} election!", BotUtil.GetElectionTerm());
+        Bot.ElectionStart();
     }
 
     public End() : void {
@@ -118,7 +119,6 @@ export default class Election {
     public Register(id : string) : void {
         if (this.started || this.HasCandidate(id))
             return;
-
         
         Bot.client.users.fetch(id).then((user : Discord.User) => {
             Console.Log("Register {0} ({1})", id, user.username);
