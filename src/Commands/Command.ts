@@ -5,6 +5,7 @@ import Messages from "../../messages.json";
 import File from "../IO/File";
 import * as Discord from "discord.js";
 import Color from "../Graphics/Color";
+import Console from "../Console";
 
 /**
  * @class An internal class called Command, that holds information about a command.
@@ -20,7 +21,12 @@ export default class Command {
 	//#region Command Functions
 
 	private static Help(cmd : Command, args : any[]) : void {
-		Bot.Send(args[0], "Command List", "Help: The command you just ran, eediot. \nPing: See how slow the bot is running. \nElection-Register: Register yourself in the next election. \nElection-Unregister: Unregister yourself from the next election. \nElection-Candidates: View the current candidates for the election.", Color.cyan);
+		Bot.Send(args[0], "Command List", 
+		"Help: The command you just ran, eediot. \
+		\nPing: See how slow the bot is running. \
+		\nElection-Help: The help menu for the election commands."
+		
+		, Color.cyan);
 	}
 
 	private static Ping(cmd : Command, args : any[]) : void {
@@ -122,21 +128,144 @@ export default class Command {
 	 * @param {any[]} args
 	 */
 	private static ElectionStart(cmd : Command, args : any[]) : void {
+		if (Bot.election.started || cmd.message.channel.id != API.testChannel) {
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Invalid Command", BotUtil.Combine(Messages.InvalidCommand, cmd.name), Color.red);
+			return;
+		}
+
         Bot.election.Start();
-        Bot.SendMessage((cmd.message.channel as Discord.TextChannel).name, Messages.ElectionBegin);
 	}
 
 	/**
-	 * Election-Start Command
+	 * Election-End Command
 	 * @param {any[]} args
 	 */
 	private static ElectionEnd(cmd : Command, args : any[]) : void {
+		if (!Bot.election.started || cmd.message.channel.id != API.testChannel) {
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Invalid Command", BotUtil.Combine(Messages.InvalidCommand, cmd.name), Color.red);
+			return;
+		}
+
         Bot.election.End();
-        Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Election Error", BotUtil.Combine("The {0} election has ended early for some reason. Ask {1} for more details.", BotUtil.GetElectionTerm(), BotUtil.Combine("<@{0}>", cmd.message.author.id)), Color.red);
 	}
 
 	/**
-	 * Election-Start Command
+	 * Election-Vote Command
+	 * @param {any[]} args
+	 */
+	 private static ElectionVote(cmd : Command, args : any[]) : void {
+		if (args.length < 2) {
+			Bot.Send(args[0], "Insufficient Parameters", "Please specify the candidate to vote for.", Color.red);
+			return;
+		}
+
+		if (!Bot.election.started) {
+			
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Election Not Started", BotUtil.Combine("The {0} election has not started yet!", BotUtil.GetElectionTerm()), Color.red);
+			return;
+		}
+
+		var candidate = Bot.election.GetCandidate((args[0] as string).replace('<@!', '').replace('>', ''));
+		if (!candidate) {
+			
+			Bot.Send(args[1], "Invalid Candidate", BotUtil.Combine("{0} is not a valid candidate.", args[0]), Color.red);
+			return;
+		}
+
+		Console.Log("{0} is voting for {1}", cmd.message.author.tag, candidate.user.tag);
+
+		if (candidate.user.id == cmd.message.author.id) {
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Vote Error", "You can't vote for yourself, cheater.", Color.red);
+			return;
+		}
+
+        if (!Bot.election.Vote(cmd.message.author, candidate)) {
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Vote Successful", BotUtil.Combine("You have successfully voted for {0} for the {1} election!", candidate.user.username, BotUtil.GetElectionTerm()), Color.green);
+		} else
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Vote Error", BotUtil.Combine("You have already voted for {0}.", Bot.election.UserCurrentlyVoted(cmd.message.author).user.username), Color.red);
+	}
+
+	/**
+	 * Election-Unvote Command
+	 * @param {any[]} args
+	 */
+	private static ElectionUnvote(cmd : Command, args : any[]) : void {
+		if (args.length < 2) {
+			Bot.Send(args[0], "Insufficient Parameters", "Please specify the candidate to remove the vote from.", Color.red);
+			return;
+		}
+
+		if (!Bot.election.started) {
+			
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Election Not Started", BotUtil.Combine("The {0} election has not started yet!", BotUtil.GetElectionTerm()), Color.red);
+			return;
+		}
+
+		var candidate = Bot.election.GetCandidate((args[0] as string).replace('<@!', '').replace('>', ''));
+
+		if (!candidate) {
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Invalid Candidate", BotUtil.Combine("{0} is not a candidate for the election.", args[0]), Color.red);
+			return;
+		}
+
+		if (candidate.user.id == cmd.message.author.id) {
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Vote Removal Error", "You haven't voted for yourself, because you can't.", Color.red);
+			return;
+		}
+
+		Console.Log("{0} is removing their vote for {1}", cmd.message.author.tag, candidate.user.tag);
+
+        if (!Bot.election.Unvote(cmd.message.author, candidate))
+        	Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Vote Removal Successful", BotUtil.Combine("Successfully removed your vote for {0} for the {1} election.", candidate.user.username, BotUtil.GetElectionTerm(), BotUtil.Combine("<@{0}>", cmd.message.author.id)), Color.green);
+		else
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Vote Removal Error", BotUtil.Combine("You haven't voted for {0}.", candidate.user.username), Color.red);
+	}
+
+	/**
+	 * Election-Voting Command
+	 * @param {any[]} args
+	 */
+	private static ElectionVoting(cmd : Command, args : any[]) : void {
+		var candidate = Bot.election.UserCurrentlyVoted(cmd.message.author);
+
+		if (!candidate)
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, BotUtil.Combine("{0} Election", BotUtil.GetElectionTerm()), "You're not voting for anyone!", Color.blue);
+		else
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, BotUtil.Combine("{0} Election", BotUtil.GetElectionTerm()), BotUtil.Combine("You're currently voting for {0}!", candidate.user.username), Color.cyan);
+	}
+
+	/**
+	 * Election-Leaderboard Command
+	 * @param {any[]} args
+	 */
+	private static ElectionLeaderboard(cmd : Command, args : any[]) : void {
+		var leaderboard = Bot.election.CandidateLeaderboard();
+
+		if (leaderboard.length < 4)
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Election Error", "There are no canidates??!", Color.red);
+		else
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, BotUtil.Combine("{0} Leaderboard", BotUtil.GetElectionTerm()), leaderboard, Color.cyan);
+	}
+
+	/**
+	 * Election-Help Command
+	 * @param {any[]} args
+	 */
+	 private static ElectionHelp(cmd : Command, args : any[]) : void {
+		Bot.Send(args[0], "Election Command List", 
+		"Election-Register: Register yourself in the next election. \
+		\nElection-Unregister: Unregister yourself from the next election. \
+		\nElection-Candidates: View the current candidates for the election. \
+		\nElection-Leaderboard: View the current election leaderboard to see who's winning. \
+		\nElection-Vote <user-mention>: Vote for the specified candidate. \
+		\nElection-Unvote <user-mention>: Removes your vote from the specified candidate. \
+		\nElection-Voting: See who you're voting for, in case you forgot."
+		
+		, Color.cyan);
+	}
+
+	/**
+	 * Warn Command
 	 * @param {any[]} args
 	 */
 	private static Warn(cmd : Command, args : any[]) : void {
@@ -178,6 +307,9 @@ export default class Command {
 			case 'ping':
 				return new Command('ping', 0n, [message.createdTimestamp.toString()], message, this.Ping);
 
+			case 'election-help':
+				return new Command('election-help', 0n, [], message, this.ElectionHelp);
+
 			case 'election-register':
 				return new Command('election-register', 0n, [message.author.id], message, this.ElectionRegister);
 
@@ -186,6 +318,18 @@ export default class Command {
                 
             case 'election-candidates':
                 return new Command('election-candidates', 0n, [], message, this.ElectionCandidates);
+
+			case 'election-vote':
+				return new Command('election-vote', 0n, args, message, this.ElectionVote);
+				
+			case 'election-unvote':
+				return new Command('election-unvote', 0n, args, message, this.ElectionUnvote);
+				
+			case 'election-voting':
+				return new Command('election-voting', 0n, [], message, this.ElectionVoting);
+				
+			case 'election-leaderboard':
+				return new Command('election-leaderboard', 0n, [], message, this.ElectionLeaderboard);
 
 			case 'register':
 				return new Command('election-register', 0n, [message.author.id], message, this.ElectionRegister);
@@ -196,10 +340,19 @@ export default class Command {
             case 'candidates':
 				return new Command('election-candidates', 0n, [], message, this.ElectionCandidates);
 
-            case 'election-start':
+			case 'vote':
+				return new Command('election-vote', 0n, args, message, this.ElectionVote);
+				
+			case 'unvote':
+				return new Command('election-unvote', 0n, args, message, this.ElectionUnvote);
+				
+			case 'voting':
+				return new Command('election-voting', 0n, [], message, this.ElectionVoting);
+
+            case 'election-start-fuckyou':
                 return new Command('election-start', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionStart);
 
-			case 'election-end':
+			case 'election-end-gotemlmao':
                 return new Command('election-end', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionEnd);
 
 			case 'warn':

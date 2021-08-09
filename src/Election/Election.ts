@@ -64,26 +64,59 @@ export default class Election {
 
     }
 
-    public Vote(user : Discord.User, candidate : Candidate) : boolean {
-        var candidate = this.GetCandidate(candidate.user.id);
+    public UserVotedAmount(user : Discord.User) : number {
+        var amount = 0;
 
-        if (candidate.votes.find((vote, index, arr) => { return vote.voter.id == user.id; })) {
-            return false;
+        for (var i = 0; i < this.candidates.length; i++) {
+            for (var l = 0; l < this.candidates[i].votes.length; l++) {
+                if (this.candidates[i].votes[l].voter.id == user.id)
+                    amount++;
+            }
+        }
+
+        return amount;
+    }
+
+    public UserCurrentlyVoted(user : Discord.User) : Candidate {
+        for (var i = 0; i < this.candidates.length; i++) {
+            for (var l = 0; l < this.candidates[i].votes.length; l++) {
+                if (this.candidates[i].votes[l].voter.id == user.id)
+                    return this.candidates[i];
+            }
+        }
+
+        return null;
+    }
+
+    public Vote(user : Discord.User, candidate : Candidate) : Candidate {
+        var candidate = this.GetCandidate(candidate.user.id);
+        var votes = candidate.votes.find((vote, index, arr) => { return vote.voter.id == user.id; });
+
+        if (votes) {
+            return this.GetCandidate(votes.recipient.id);
+        }
+
+        if (this.UserVotedAmount(user) > 0) {
+            return this.UserCurrentlyVoted(user);
         }
 
         candidate.votes.push(new Vote(user, candidate.user));
-        return true;
+        return null;
     }
 
     public Unvote(user : Discord.User, candidate : Candidate) : boolean {
         var candidate = this.GetCandidate(candidate.user.id);
 
         if (!candidate.votes.find((vote, index, arr) => { return vote.voter.id == user.id; })) {
-            return false;
+            return true;
+        }
+
+        if (this.UserVotedAmount(user) < 1) {
+            return true;
         }
 
         candidate.votes.splice(candidate.votes.indexOf(candidate.votes.find((vote, index, arr) => { return vote.voter.id == user.id; })), 1);
-        return true;
+        return false;
     }
 
     public Start() : void {
@@ -116,6 +149,14 @@ export default class Election {
         return list;
     }
 
+    public CandidateLeaderboard(seperator : string = '\n') : string {
+        var list : string[] = [];
+        for (var i : number = 0; i < this.candidateCount; i++) {
+            list.push(BotUtil.Combine("{0} - {1}", this.candidates[i].user.username, this.candidates[i].voteCount));
+        }
+        return list.sort((a, b) => { return parseInt(b.split(' ')[2]) - parseInt(a.split(' ')[2]); }).join(seperator);
+    }
+
     public Register(id : string) : void {
         if (this.started || this.HasCandidate(id))
             return;
@@ -138,6 +179,25 @@ export default class Election {
 
     public SetChannel(channel : Discord.TextChannel) : void {
         this.channel = channel;
+    }
+
+    public GetLeadCandidate() : Candidate {
+        var candidate : Candidate = null;
+        var temp : Candidate = null;
+
+        for (var i = 0; i < this.candidates.length; i++) {
+            if (temp != null) {
+                if (this.candidates[i].voteCount > temp.voteCount)
+                    temp = this.candidates[i];
+            } else {
+                temp = this.candidates[i];
+            }
+        }
+
+        if (temp.voteCount > 0)
+            candidate = temp;
+
+        return candidate;
     }
 
     public constructor() {

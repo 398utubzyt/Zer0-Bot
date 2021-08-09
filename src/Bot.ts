@@ -36,8 +36,6 @@ export default class Bot {
 
         this.client.on('ready', () => this.Ready());
         this.client.on('messageCreate', (message) => this.MessageCreate(message));
-        this.client.on('messageReactionAdd', (reaction, user) => this.ReactionAdd(reaction as Discord.MessageReaction, user as Discord.User));
-        this.client.on('messageReactionRemove', (reaction, user) => this.ReactionRemove(reaction as Discord.MessageReaction, user as Discord.User));
 
         this.election = new Election();
 
@@ -136,108 +134,39 @@ export default class Bot {
         }
     }
 
-    public static ReactionAdd(reaction : Discord.MessageReaction, user : Discord.User) : void {
-        if (reaction.message.channel.id == API.electionChannel) {
-            if (reaction.message.author.id == this.client.user.id) {
-                if (reaction.emoji.name == API.voteEmoji) {
-                    if (!user.equals(this.client.user)) {
-                        if (!user.dmChannel)
-                            user.createDM().then((dm) => {
-                                var embed = new Discord.MessageEmbed();
-                                var candidate = this.election.GetCandidate(this.client.users.cache.find((user, id, map) => { if (user.username == reaction.message.embeds[0].description.replace('<@', '').replace('>', '')) return true; return false; }).id);
-                
-                                if (!this.election.Vote(user, candidate)) {
-                                    embed.setTitle("Error trying to Vote");
-                                    embed.setDescription("You have already voted for this candidate, but are still voting anyway. \nSince this is not possible, please report this to 398 immediately.");
-                                    embed.setColor("#FF0000");
-                                } else {
-                                    embed.setTitle("Voting Successful");
-                                    embed.setDescription(BotUtil.Combine("You have voted for {0} to be the {1} president.", candidate.user.username, BotUtil.GetElectionTerm()));
-                                    embed.setColor("#00FF00");
-                                }
-                                
-                                dm.send({embeds: [embed]});
-                            });
-                        else {
-                            var embed = new Discord.MessageEmbed();
-                            var candidate = this.election.GetCandidate(this.client.users.cache.find((user, id, map) => { if (user.username == reaction.message.embeds[0].description.replace('<@', '').replace('>', '')) return true; return false; }).id);
-            
-                            if (!this.election.Vote(user, candidate)) {
-                                embed.setTitle("Error trying to Vote");
-                                embed.setDescription("You have already voted for this candidate, but are still voting anyway. \nSince this is not possible, please report this to 398 immediately.");
-                                embed.setColor("#FF0000");
-                            } else {
-                                embed.setTitle("Voting Successful");
-                                embed.setDescription(BotUtil.Combine("You have voted for {0} to be the {1} president.", candidate.user.username, BotUtil.GetElectionTerm()));
-                                embed.setColor("#00FF00");
-                            }
-                            
-                            user.dmChannel.send({embeds: [embed]});
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public static ReactionRemove(reaction : Discord.MessageReaction, user : Discord.User) : void {
-        if (reaction.message.channel.id == API.electionChannel) {
-            if (reaction.message.author.id == this.client.user.id) {
-                if (reaction.emoji.name == API.voteEmoji) {
-                    if (!user.equals(this.client.user)) {
-                        if (!user.dmChannel)
-                            user.createDM().then((dm) => {
-                                var embed = new Discord.MessageEmbed();
-                                var candidate = this.election.GetCandidate(this.client.users.cache.find((user, id, map) => { if (user.username == reaction.message.embeds[0].description.replace('<@', '').replace('>', '')) return true; return false; }).id);
-                
-                                if (!this.election.Unvote(user, candidate)) {
-                                    embed.setTitle("Error trying to Remove Vote");
-                                    embed.setDescription("You haven't voted for this candidate, but are still removing your vote anyway. \nSince this is not possible, please report this to 398 immediately.");
-                                    embed.setColor("#FF0000");
-                                } else {
-                                    embed.setTitle("Vote Remove Successful");
-                                    embed.setDescription(BotUtil.Combine("You have removed your vote for {0} to be the {1} president.", candidate.user.username, BotUtil.GetElectionTerm()));
-                                    embed.setColor("#00FF00");
-                                }
-                                
-                                dm.send({embeds: [embed]});
-                            });
-                        else {
-                            var embed = new Discord.MessageEmbed();
-                            var candidate = this.election.GetCandidate(this.client.users.cache.find((user, id, map) => { if (user.username == reaction.message.embeds[0].description.replace('<@', '').replace('>', '')) return true; return false; }).id);
-            
-                            if (!this.election.Unvote(user, candidate)) {
-                                embed.setTitle("Error trying to Remove Vote");
-                                embed.setDescription("You haven't voted for this candidate, but are still removing your vote anyway. \nSince this is not possible, please report this to 398 immediately.");
-                                embed.setColor("#FF0000");
-                            } else {
-                                embed.setTitle("Vote Remove Successful");
-                                embed.setDescription(BotUtil.Combine("You have removed your vote for {0} to be the {1} president.", candidate.user.username, BotUtil.GetElectionTerm()));
-                                embed.setColor("#00FF00");
-                            }
-                            
-                            user.dmChannel.send({embeds: [embed]});
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     public static ElectionStart() : void {
-        for (var i : number = 0; i < this.election.candidateCount; i++) {
-            var candidate = this.election.candidates[i];
+        var announcement = new Discord.MessageEmbed();
+            
+        announcement.setTitle(BotUtil.Combine("{0} Election Started", BotUtil.GetElectionTerm()));
+        announcement.setDescription(Messages.ElectionBegin);
+        announcement.setColor("AQUA");
 
+        this.election.channel.send({embeds: [announcement]}).then((msg) => {
             var embed = new Discord.MessageEmbed();
             
-            embed.setTitle(BotUtil.Combine("{0} Candidate", BotUtil.GetElectionTerm()));
-            embed.setDescription(candidate.user.username);
+            embed.setTitle(BotUtil.Combine("{0} Candidates", BotUtil.GetElectionTerm()));
+            embed.setDescription(this.election.CandidateList());
             embed.setColor("BLURPLE");
 
-            this.election.channel.send({embeds: [embed]}).then((msg) => {
-                candidate.message = msg;
-                msg.react(API.voteEmoji);
-            });
-        }
+            this.election.channel.send({embeds: [embed]});
+        });
+    }
+
+    public static ElectionEnd() : void {
+        var announcement = new Discord.MessageEmbed();
+            
+        announcement.setTitle(BotUtil.Combine("{0} Election Ended", BotUtil.GetElectionTerm()));
+        announcement.setDescription(BotUtil.Combine("The {0} election has ended early for some reason. Ask 398 for more details.", BotUtil.GetElectionTerm()));
+        announcement.setColor("BLUE");
+
+        this.election.channel.send({embeds: [announcement]}).then((msg) => {
+            var embed = new Discord.MessageEmbed();
+            
+            embed.setTitle(BotUtil.Combine("{0} Results", BotUtil.GetElectionTerm()));
+            embed.setDescription(this.election.CandidateLeaderboard());
+            embed.setColor("BLURPLE");
+
+            this.election.channel.send({embeds: [embed]});
+        });
     }
 }
