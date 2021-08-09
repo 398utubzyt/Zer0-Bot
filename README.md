@@ -55,6 +55,7 @@ For Discord API functionality (which you will definitely need), you need to crea
 
 - [x] Add Candidates
 - [x] Set/Manage Reactions
-- [ ] Detect Cheating (removing votes etc.)
+- [x] Detect Cheating (removing votes etc.)
+      ^^ This is redundent since it uses commands instead of reactions now
 
 Please leave any suggestions you have in the issues section. 
