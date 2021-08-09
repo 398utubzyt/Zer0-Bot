@@ -8,6 +8,7 @@ import BotUtil from "./BotUtil";
 import File from "./IO/File";
 import path from "path";
 import Color from "./Graphics/Color";
+import { JsonObjectExpression } from "typescript";
 
 export default class Bot {
     public static readonly persistentPath : string = path.join(__dirname, '..\\persistent_data\\');
@@ -189,7 +190,7 @@ export default class Bot {
                                 var embed = new Discord.MessageEmbed();
                                 var candidate = this.election.GetCandidate(this.client.users.cache.find((user, id, map) => { if (user.username == reaction.message.embeds[0].description.replace('<@', '').replace('>', '')) return true; return false; }).id);
                 
-                                if (!this.election.Vote(user, candidate)) {
+                                if (!this.election.Unvote(user, candidate)) {
                                     embed.setTitle("Error trying to Remove Vote");
                                     embed.setDescription("You haven't voted for this candidate, but are still removing your vote anyway. \nSince this is not possible, please report this to 398 immediately.");
                                     embed.setColor("#FF0000");
@@ -205,7 +206,7 @@ export default class Bot {
                             var embed = new Discord.MessageEmbed();
                             var candidate = this.election.GetCandidate(this.client.users.cache.find((user, id, map) => { if (user.username == reaction.message.embeds[0].description.replace('<@', '').replace('>', '')) return true; return false; }).id);
             
-                            if (!this.election.Vote(user, candidate)) {
+                            if (!this.election.Unvote(user, candidate)) {
                                 embed.setTitle("Error trying to Remove Vote");
                                 embed.setDescription("You haven't voted for this candidate, but are still removing your vote anyway. \nSince this is not possible, please report this to 398 immediately.");
                                 embed.setColor("#FF0000");
@@ -228,7 +229,7 @@ export default class Bot {
             var candidate = this.election.candidates[i];
 
             var embed = new Discord.MessageEmbed();
-
+            
             embed.setTitle(BotUtil.Combine("{0} Candidate", BotUtil.GetElectionTerm()));
             embed.setDescription(candidate.user.username);
             embed.setColor("BLURPLE");
