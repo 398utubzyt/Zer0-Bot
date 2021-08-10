@@ -349,10 +349,10 @@ export default class Command {
 			case 'voting':
 				return new Command('election-voting', 0n, [], message, this.ElectionVoting);
 
-            case 'election-start-fuckyou':
+            case 'election-start':
                 return new Command('election-start', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionStart);
 
-			case 'election-end-gotemlmao':
+			case 'election-end':
                 return new Command('election-end', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionEnd);
 
 			case 'warn':

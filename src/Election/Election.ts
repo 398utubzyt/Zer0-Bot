@@ -128,6 +128,7 @@ export default class Election {
     public End() : void {
         this.started = false;
         Console.Log("Ending the {0} election!", BotUtil.GetElectionTerm());
+        Bot.ElectionEnd();
     }
 
     public HasCandidate(id : string) : boolean {
@@ -196,6 +197,30 @@ export default class Election {
 
         if (temp.voteCount > 0)
             candidate = temp;
+
+        return candidate;
+    }
+
+    public GetSecondLeadCandidate() : Candidate {
+        var candidate : Candidate = null;
+        var temp : Candidate = null;
+        var second : Candidate = null;
+
+        for (var i = 0; i < this.candidates.length; i++) {
+            if (temp != null) {
+                if (this.candidates[i].voteCount > temp.voteCount) {
+                    second = temp;
+                    temp = this.candidates[i];
+                }
+            } else {
+                temp = this.candidates[i];
+            }
+        }
+
+        if (second) {
+            if (second.voteCount > 0)
+                candidate = second;
+        }
 
         return candidate;
     }

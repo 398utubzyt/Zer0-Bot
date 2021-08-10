@@ -140,7 +140,7 @@ export default class Bot {
             
             announcement.setTitle(BotUtil.Combine("{0} Election Started", BotUtil.GetElectionTerm()));
             announcement.setDescription(Messages.ElectionBegin);
-            announcement.setColor("AQUA");
+            announcement.setColor("GREEN");
 
             this.election.channel.send({embeds: [announcement]}).then((msg) => {
                 var embed = new Discord.MessageEmbed();
@@ -159,8 +159,17 @@ export default class Bot {
             var announcement = new Discord.MessageEmbed();
             
             announcement.setTitle(BotUtil.Combine("{0} Election Ended", BotUtil.GetElectionTerm()));
-            announcement.setDescription(BotUtil.Combine("The {0} election has ended early for some reason. Ask 398 for more details.", BotUtil.GetElectionTerm()));
-            announcement.setColor("BLUE");
+            if (this.election.GetLeadCandidate()) {
+                if (this.election.GetSecondLeadCandidate()) {
+                    announcement.setDescription(BotUtil.Combine("The {0} election has ended! Congratulations to {1} for getting the most votes, and to {2} for getting the second most.", BotUtil.GetElectionTerm(), this.election.GetLeadCandidate(), this.election.GetSecondLeadCandidate()));
+                } else {
+                    announcement.setDescription(BotUtil.Combine("The {0} election has ended! Congratulations to {1} for getting the most votes. The Vice President will be decided by Michael.", BotUtil.GetElectionTerm(), this.election.GetLeadCandidate()));
+                }
+                announcement.setColor("BLUE");
+            } else {
+                announcement.setDescription(BotUtil.Combine("The {0} election has ended! Looks like nobody voted, so Michael is going to decide who's going in the government instead. Thanks for the help, guys!", BotUtil.GetElectionTerm()));
+                announcement.setColor("RED");
+            }
 
             this.election.channel.send({embeds: [announcement]}).then((msg) => {
                 var embed = new Discord.MessageEmbed();
