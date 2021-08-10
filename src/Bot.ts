@@ -135,38 +135,42 @@ export default class Bot {
     }
 
     public static ElectionStart() : void {
-        var announcement = new Discord.MessageEmbed();
+        this.election.channel.send("@everyone").then((msg) => {
+            var announcement = new Discord.MessageEmbed();
             
-        announcement.setTitle(BotUtil.Combine("{0} Election Started", BotUtil.GetElectionTerm()));
-        announcement.setDescription(Messages.ElectionBegin);
-        announcement.setColor("AQUA");
+            announcement.setTitle(BotUtil.Combine("{0} Election Started", BotUtil.GetElectionTerm()));
+            announcement.setDescription(Messages.ElectionBegin);
+            announcement.setColor("AQUA");
 
-        this.election.channel.send({embeds: [announcement]}).then((msg) => {
-            var embed = new Discord.MessageEmbed();
-            
-            embed.setTitle(BotUtil.Combine("{0} Candidates", BotUtil.GetElectionTerm()));
-            embed.setDescription(this.election.CandidateList());
-            embed.setColor("BLURPLE");
+            this.election.channel.send({embeds: [announcement]}).then((msg) => {
+                var embed = new Discord.MessageEmbed();
+                
+                embed.setTitle(BotUtil.Combine("{0} Candidates", BotUtil.GetElectionTerm()));
+                embed.setDescription(this.election.CandidateList());
+                embed.setColor("BLURPLE");
 
-            this.election.channel.send({embeds: [embed]});
+                this.election.channel.send({embeds: [embed]});
+            });
         });
     }
 
     public static ElectionEnd() : void {
-        var announcement = new Discord.MessageEmbed();
+        this.election.channel.send("@everyone").then((msg) => {
+            var announcement = new Discord.MessageEmbed();
             
-        announcement.setTitle(BotUtil.Combine("{0} Election Ended", BotUtil.GetElectionTerm()));
-        announcement.setDescription(BotUtil.Combine("The {0} election has ended early for some reason. Ask 398 for more details.", BotUtil.GetElectionTerm()));
-        announcement.setColor("BLUE");
+            announcement.setTitle(BotUtil.Combine("{0} Election Ended", BotUtil.GetElectionTerm()));
+            announcement.setDescription(BotUtil.Combine("The {0} election has ended early for some reason. Ask 398 for more details.", BotUtil.GetElectionTerm()));
+            announcement.setColor("BLUE");
 
-        this.election.channel.send({embeds: [announcement]}).then((msg) => {
-            var embed = new Discord.MessageEmbed();
-            
-            embed.setTitle(BotUtil.Combine("{0} Results", BotUtil.GetElectionTerm()));
-            embed.setDescription(this.election.CandidateLeaderboard());
-            embed.setColor("BLURPLE");
+            this.election.channel.send({embeds: [announcement]}).then((msg) => {
+                var embed = new Discord.MessageEmbed();
+                
+                embed.setTitle(BotUtil.Combine("{0} Results", BotUtil.GetElectionTerm()));
+                embed.setDescription(this.election.CandidateLeaderboard());
+                embed.setColor("BLURPLE");
 
-            this.election.channel.send({embeds: [embed]});
+                this.election.channel.send({embeds: [embed]});
+            });
         });
     }
 }
