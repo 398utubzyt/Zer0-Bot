@@ -137,6 +137,19 @@ export default class Command {
 	}
 
 	/**
+	 * Election-Resume Command
+	 * @param {any[]} args
+	 */
+	 private static ElectionResume(cmd : Command, args : any[]) : void {
+		if (Bot.election.started || cmd.message.channel.id != API.testChannel) {
+			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Invalid Command", BotUtil.Combine(Messages.InvalidCommand, cmd.name), Color.red);
+			return;
+		}
+
+        Bot.election.started = true;
+	}
+
+	/**
 	 * Election-End Command
 	 * @param {any[]} args
 	 */
@@ -181,6 +194,7 @@ export default class Command {
 
         if (!Bot.election.Vote(cmd.message.author, candidate)) {
 			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Vote Successful", BotUtil.Combine("You have successfully voted for {0} for the {1} election!", candidate.user.username, BotUtil.GetElectionTerm()), Color.green);
+			File.Append('presidential-votes.txt', BotUtil.Combine('\n{0} {1}', cmd.message.author.id, candidate.user.id));
 		} else
 			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Vote Error", BotUtil.Combine("You have already voted for {0}.", Bot.election.UserCurrentlyVoted(cmd.message.author).user.username), Color.red);
 	}
@@ -215,9 +229,17 @@ export default class Command {
 
 		Console.Log("{0} is removing their vote for {1}", cmd.message.author.tag, candidate.user.tag);
 
-        if (!Bot.election.Unvote(cmd.message.author, candidate))
+        if (!Bot.election.Unvote(cmd.message.author, candidate)) {
         	Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Vote Removal Successful", BotUtil.Combine("Successfully removed your vote for {0} for the {1} election.", candidate.user.username, BotUtil.GetElectionTerm(), BotUtil.Combine("<@{0}>", cmd.message.author.id)), Color.green);
-		else
+
+			var fileContent = File.Read('presidential-votes.txt');
+
+			if (fileContent.includes(BotUtil.Combine('\n{0} {1}', cmd.message.author.id, candidate.user.id))) {
+				File.Write('presidential-votes.txt', fileContent.replace(BotUtil.Combine('\n{0} {1}', cmd.message.author.id, candidate.user.id), ''));
+			} else {
+				File.Write('presidential-votes.txt', fileContent.replace(BotUtil.Combine('{0} {1}', cmd.message.author.id, candidate.user.id), ''));
+			}
+		} else
 			Bot.Send((cmd.message.channel as Discord.TextChannel).name, "Vote Removal Error", BotUtil.Combine("You haven't voted for {0}.", candidate.user.username), Color.red);
 	}
 
@@ -351,6 +373,10 @@ export default class Command {
 
             case 'election-start-fuckyou':
                 return new Command('election-start', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionStart);
+
+				
+			case 'election-resume':
+				return new Command('election-resume', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionResume);
 
 			case 'election-end-gotemlmao':
                 return new Command('election-end', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionEnd);

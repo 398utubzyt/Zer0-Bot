@@ -112,8 +112,29 @@ export default class Bot {
                     this.election.Register(candidates[i]);
                 }
             }
+
+            setTimeout(() => {
+                if (File.Exists('presidential-votes.txt')) {
+                    var lines : string[] = File.Read('presidential-votes.txt').split('\n');
+                    if (lines.length > 0) {
+                        if (lines[lines.length - 1].length < 5)
+                            lines.pop();
+                    }
+                    
+                    var votes : string[][] = [];
+    
+                    for (var i = 0; i < lines.length; i++) {
+                        votes.push(lines[i].split(' '));
+                        votes[i].forEach((val, ind, arr) => { arr[ind] = val.trim(); });
+                        this.election.Vote(this.client.users.cache.get(votes[i][0]), this.election.GetCandidate(this.client.users.cache.get(votes[i][1]).id));
+                    }
+                } else {
+                    File.Create('presidential-votes.txt');
+                }
+            }, 1000)
         } else {
             File.Create('presidential-candidates.txt');
+            File.Create('presidential-votes.txt');
         }
 
         Console.Log(BotUtil.Combine(Messages.Startup, this.client.user.username));
