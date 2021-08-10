@@ -3,7 +3,7 @@
     "Error": "Error! {0}",
     "Permissions": "Insufficient permissions! Permissions required: {0}",
     "InvalidCommand": "\"{0}\" is an invalid command!",
-    "ElectionBegin": "The election has begun, cast your votes now! Use `::election-leaderboard` to see who's winning, and use `::vote <user-mention>` to vote!",
+    "ElectionBegin": "The election has begun, again, cast your votes again! Use `::election-leaderboard` to see who's winning, and use `::vote <user-mention>` to vote! (sorry, I'm kinda stupid lmao)",
     "MultiVoterExposed": "{0}, please don't vote for multiple people. Your votes have been removed, please vote again.",
     "VoteRemovedExposed": "{0} removed {1}'s vote. {0}, please don't remove votes.",
     "VoteSelfExposed": "{0}, you can't vote for yourself. That's unfair."

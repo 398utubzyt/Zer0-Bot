@@ -165,7 +165,7 @@ export default class Command {
 			return;
 		}
 
-		var candidate = Bot.election.GetCandidate((args[0] as string).replace('<@!', '').replace('>', ''));
+		var candidate = Bot.election.GetCandidate((args[0] as string).replace('<@', '').replace('!', '').replace('>', ''));
 		if (!candidate) {
 			
 			Bot.Send(args[1], "Invalid Candidate", BotUtil.Combine("{0} is not a valid candidate.", args[0]), Color.red);
@@ -349,10 +349,10 @@ export default class Command {
 			case 'voting':
 				return new Command('election-voting', 0n, [], message, this.ElectionVoting);
 
-            case 'election-start':
+            case 'election-start-fuckyou':
                 return new Command('election-start', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionStart);
 
-			case 'election-end':
+			case 'election-end-gotemlmao':
                 return new Command('election-end', Discord.Permissions.FLAGS.ADMINISTRATOR, [message.author.id], message, this.ElectionEnd);
 
 			case 'warn':
