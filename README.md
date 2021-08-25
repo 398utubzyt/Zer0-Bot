@@ -18,6 +18,7 @@ For Discord API functionality (which you will definitely need), you need to crea
     "prefix": "prefix-text-here"
 }
 ```
+To run it, install node.js and typescript, just run `npx ts-node .` in the root directory.
 
 ## Progress
 
